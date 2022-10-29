@@ -43,7 +43,7 @@ namespace lpp
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7, 0.8, 0.8, 0.3));
 
             //ImGui::SetCursorPosX(((width_)-width_/1.33333f) - (button_size_width_));
-            ImGui::SetCursorPosX((width_*0.25f) - (button_size_width_/2.0f));
+            ImGui::SetCursorPosX((width_*0.25f) - (button_size_width_/1.33333f));
             ImGui::SetCursorPosY(20);
             if (ImGui::Button("CREATE PROJECT", ImVec2(button_size_width_, button_size_height_)))
             {
@@ -60,7 +60,7 @@ namespace lpp
             }
 
             //ImGui::SetCursorPosX(((width_)-width_ / 4.0f) );
-            ImGui::SetCursorPosX((width_ * 0.75f) - (button_size_width_ / 2.0f));
+            ImGui::SetCursorPosX((width_ * 0.75f) - (button_size_width_ / 4.0f));
             ImGui::SetCursorPosY(20);
             if (ImGui::Button("EDIT PROJECT", ImVec2(button_size_width_, button_size_height_)))
             {
@@ -149,27 +149,30 @@ namespace lpp
                 ImGui::EndPopup();
 
             }
+            ImGui::SameLine();
         }
 
         void ugv_path_gui::project_list_renderer()
         {
-            const size_t max_columns = 3;//0-1
+            const size_t max_columns = 2;//0-1
             const size_t max_rows = 10;
 
             const size_t row_offset = 100;
             const size_t column_offset = width_/(max_columns+1);
+            float substract_var = 2.0;
 
-            size_t current_column = 1;
-            size_t current_row = 1;
+            size_t current_column = 0;
+            size_t current_row = 0;
 
             for (const auto& project : active_projects_)
             {
-                ImGui::SetCursorPos(ImVec2((current_column * column_offset), row_offset + (current_row * row_offset)));
+                ImGui::SetCursorPos(ImVec2(column_offset + (current_column * column_offset) - (button_project_width_*1.2f), row_offset + (current_row * row_offset)));
                 ImGui::Button(project.name_.c_str(),ImVec2(button_project_width_,button_project_height_));
+                substract_var *= 2.0f;
                 if (current_column == max_columns)
                 {
                     current_row++;
-                    current_column = 1;
+                    current_column = 0;
                 }
                 else
                 {
