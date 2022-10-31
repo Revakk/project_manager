@@ -8,6 +8,7 @@
 #include <vector>
 #include <array>
 #include <queue>
+#include <chrono>
 
 
 constexpr size_t PROJECT_NAME_MAX_LENGTH = 25;
@@ -77,8 +78,7 @@ namespace lpp
             void project_list_renderer();
             void status_msg_popup();
 
-
-
+            void render_popup_message();
 
         private:
             const float button_size_width_ = 125.0f;
@@ -103,7 +103,11 @@ namespace lpp
             char project_name_[PROJECT_NAME_MAX_LENGTH]{};
             std::queue<GUI_STATUS> gui_status_msgs_ = {};
 
-            
+            std::time_t popup_decay_time_ = std::time_t{0};
+            std::time_t popup_start_time_ = std::time_t{ 0 };
+            std::string popup_status_string_{};
+            ImVec4 popup_text_color_ = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
 
         };
 
