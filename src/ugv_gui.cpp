@@ -126,13 +126,14 @@ namespace lpp
                 {
                     create_project_ = false;
 
-                    active_projects_.emplace_back(project(project_name_, 0, 0));
                     
-                    auto found = std::find_if(active_projects_.begin(), active_projects_.end(),
+                    
+                    auto found_iter = std::find_if(active_projects_.begin(), active_projects_.end(),
                         [&project_name_ = this->project_name_](project& _prj) {return _prj.name_.c_str() == project_name_; });
                     
-                    if (found == active_projects_.end())
+                    if (found_iter == active_projects_.end() && project_name_[0] != '\0')
                     {
+                        active_projects_.emplace_back(project(project_name_, 0, 0));
                         gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
                     }
                     else
@@ -185,11 +186,52 @@ namespace lpp
 
         void ugv_path_gui::status_msg_popup()
         {
+            auto time = std::chrono::system_clock::now();
+            if (!gui_status_msgs_.empty())
+            {
+                popup_start_time_ = std::chrono::system_clock::to_time_t(time);
+                popup_decay_time_ = popup_start_time_;
+
+                auto status_msg = gui_status_msgs_.front();
+                gui_status_msgs_.pop();
+
+                switch (status_msg)
+                {
+                case lpp::ugv::GUI_STATUS::DUPLICATE_PROJECT_NAME:
+                    popup_text_color_ = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+                    popup_status_string_ = "Cannot create project - DUPLICATE PROJECT NAME";
+                    std::cout << "DUPLICATE " << '\n';
+                    break;
+                case lpp::ugv::GUI_STATUS::PROJECT_CREATE_SUCCESS:
+                    popup_text_color_ = ImVec4(0.2f, 1.0f, 0.2f, 1.0f);
+                    popup_status_string_ = "Project created succesfully";
+                    break;
+                default:
+                    break;
+                }
+            }
+            else
+            {
+                //popup_decay_time_ = std::time_t{ 0 };
+            }
+
+
+            
+        }
+
+        void ugv_path_gui::render_popup_message()
+        {
+            ImGui::SetCursorPos(ImVec2(10, height_ - 20.0f));
+            ImGui::BeginChild("status-popup", ImVec2(width_, 100));
+            ImGui::TextColored(popup_text_color_, popup_status_string_.c_str());
+
+            ImGui::EndChild();
+
         }
 
         void ugv_path_gui::update()
         {
-            ImGui::SetWindowSize("Project manager", ImVec2(width_, height_));
+            ImGui::SetWindowSize("Project manager", ImVec2(width_, height_-20.0f));
 
             ImGui::SetWindowPos("Project manager", ImVec2(0, 0));
 
@@ -202,8 +244,10 @@ namespace lpp
             render_button_section();
             project_list_renderer();
 
-
+            status_msg_popup();
+            
             ImGui::End();
+            render_popup_message();
 
            // ImGui::ShowDemoWindow();
             ImGui::PopStyleVar(1);
