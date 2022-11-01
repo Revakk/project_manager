@@ -33,7 +33,7 @@ namespace lpp
 
         struct project
         {
-           std::string name_ = "";
+            std::string name_ = "";
             std::time_t current_instance_time_ = {};
             std::time_t overall_time_ = {};
             ImVec4 color_{};
@@ -79,6 +79,8 @@ namespace lpp
             void status_msg_popup();
 
             void render_popup_message();
+
+            void on_project_button_active(const std::string_view& _project_name);
 
         private:
             const float button_size_width_ = 125.0f;

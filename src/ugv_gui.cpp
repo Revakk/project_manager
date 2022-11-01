@@ -127,9 +127,8 @@ namespace lpp
                     create_project_ = false;
 
                     
-                    
                     auto found_iter = std::find_if(active_projects_.begin(), active_projects_.end(),
-                        [&project_name_ = this->project_name_](project& _prj) {return _prj.name_.c_str() == project_name_; });
+                        [&project_name_ = this->project_name_](project& _prj) {return std::string(_prj.name_.c_str()) == std::string(project_name_); });
                     
                     if (found_iter == active_projects_.end() && project_name_[0] != '\0')
                     {
@@ -168,7 +167,10 @@ namespace lpp
             for (const auto& project : active_projects_)
             {
                 ImGui::SetCursorPos(ImVec2(column_offset + (current_column * column_offset) - (button_project_width_*1.2f), row_offset + (current_row * row_offset)));
-                ImGui::Button(project.name_.c_str(),ImVec2(button_project_width_,button_project_height_));
+                if (ImGui::Button(project.name_.c_str(), ImVec2(button_project_width_, button_project_height_)))
+                {
+                    on_project_button_active(project.name_);
+                }
                 substract_var *= 2.0f;
                 if (current_column == max_columns)
                 {
@@ -182,6 +184,14 @@ namespace lpp
                 }
             }
             
+        }
+
+        void ugv_path_gui::on_project_button_active(const std::string_view& _project_name)
+        {
+            auto iter = std::find_if(active_projects_.begin(), active_projects_.end(), 
+                [&_project_name](project& _prj) { return _prj.name_ == _project_name; });
+
+
         }
 
         void ugv_path_gui::status_msg_popup()
