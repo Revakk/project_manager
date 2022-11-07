@@ -164,12 +164,21 @@ namespace lpp
             size_t current_column = 0;
             size_t current_row = 0;
 
+            std::string project_text_ = "";
+            const std::string placeholder_worktime_project = "00:25:45";
+            const std::string placeholder_overall_time_project = "23:12:00";
+
             for (const auto& project : active_projects_)
             {
+                project_text_ = project.name_ + '\n';
+                project_text_ += placeholder_worktime_project + '\n';
+                project_text_ += placeholder_overall_time_project + '\n';
                 ImGui::SetCursorPos(ImVec2(column_offset + (current_column * column_offset) - (button_project_width_*1.2f), row_offset + (current_row * row_offset)));
-                if (ImGui::Button(project.name_.c_str(), ImVec2(button_project_width_, button_project_height_)))
+                if (ImGui::Button(project_text_.c_str(), ImVec2(button_project_width_, button_project_height_)))
                 {
-                    on_project_button_active(project.name_);
+                    
+
+                    on_project_button_active(project_text_);
                 }
                 substract_var *= 2.0f;
                 if (current_column == max_columns)
