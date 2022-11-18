@@ -2,10 +2,10 @@
 #include <vector>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
-#include "ugv_gui.hpp"
+#include "project_manager_gui.hpp"
 
-using namespace lpp;
-using namespace ugv;
+using namespace project_manager;
+using namespace gui;
 
 int main(int, char**) 
 {
@@ -39,7 +39,7 @@ int main(int, char**)
 	glfwGetFramebufferSize(window, &screen_width, &screen_height);
 	glViewport(0, 0, screen_width, screen_height);
 
-	lpp::ugv::ugv_path_gui myimgui;
+	project_manager_app myimgui;
 	myimgui.init(window, glsl_version,width,height);
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();

@@ -13,9 +13,9 @@
 
 constexpr size_t PROJECT_NAME_MAX_LENGTH = 25;
 
-namespace lpp
+namespace project_manager
 {
-    namespace ugv
+    namespace gui
     {
         enum class PROJECT_ACTION
         {
@@ -43,11 +43,11 @@ namespace lpp
         };
 
         
-        class ugv_path_gui
+        class project_manager_app
         {
         public:
 
-            ugv_path_gui()
+            project_manager_app()
             {
                 
             }
@@ -97,8 +97,8 @@ namespace lpp
             bool edit_project_ = false;
             bool export_time_ = false;
 
-            int width_;
-            int height_;
+            int width_ = 600;
+            int height_ = 800;
 
             std::vector<project> active_projects_ = {};
 
@@ -110,6 +110,8 @@ namespace lpp
             std::string popup_status_string_{};
             ImVec4 popup_text_color_ = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
+
+            static constexpr const char* time_format = "{:%Y/%m/%d%H:%M:%S}";
 
         };
 
