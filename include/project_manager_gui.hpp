@@ -1,53 +1,27 @@
 #pragma once
 
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <memory>
-#include <nlohmann/json_fwd.hpp>
-#include <vector>
-#include <array>
-#include <queue>
-#include <chrono>
+#include "project_manager.hpp"
+#include "common.hpp"
 
 
 constexpr size_t PROJECT_NAME_MAX_LENGTH = 25;
 
-namespace lpp
+namespace pm
 {
-    namespace ugv
+    namespace gui
     {
-        enum class PROJECT_ACTION
-        {
-            CREATE,
-            EDIT,
-            DELETE
-        };
-
+       
         enum class GUI_STATUS
         {
             DUPLICATE_PROJECT_NAME,
             PROJECT_CREATE_SUCCESS
         };
-
-
-        struct project
-        {
-            std::string name_ = "";
-            std::time_t current_instance_time_ = {};
-            std::time_t overall_time_ = {};
-            ImVec4 color_{};
-            
-            bool currently_active_ = false;
-
-        };
-
         
-        class ugv_path_gui
+        class project_manager_gui
         {
         public:
 
-            ugv_path_gui()
+            project_manager_gui()
             {
                 
             }
@@ -81,6 +55,7 @@ namespace lpp
             void render_popup_message();
 
             void on_project_button_active(const std::string_view& _project_name);
+            void on_create_project_button();
 
         private:
             const float button_size_width_ = 125.0f;
@@ -97,10 +72,13 @@ namespace lpp
             bool edit_project_ = false;
             bool export_time_ = false;
 
-            int width_;
-            int height_;
+            int width_ = 600;
+            int height_ = 800;
 
-            std::vector<project> active_projects_ = {};
+           
+
+            project_manager project_manager_;
+            //std::vector<project> active_projects_ = {};
 
             char project_name_[PROJECT_NAME_MAX_LENGTH]{};
             std::queue<GUI_STATUS> gui_status_msgs_ = {};
@@ -110,6 +88,8 @@ namespace lpp
             std::string popup_status_string_{};
             ImVec4 popup_text_color_ = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
+
+            static constexpr const char* time_format = "{:%Y/%m/%d%H:%M:%S}";
 
         };
 

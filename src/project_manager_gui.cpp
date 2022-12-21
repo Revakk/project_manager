@@ -1,4 +1,4 @@
-#include "ugv_gui.hpp"
+#include "project_manager_gui.hpp"
 #include <chrono>
 #include <functional>
 #include <imgui.h>
@@ -7,11 +7,11 @@
 #include <thread>
 #include <iostream>
 
-namespace lpp
+namespace pm
 {
-    namespace ugv
+    namespace gui
     {
-        void ugv_path_gui::init(GLFWwindow *_window, const char *_glsl_version,const int& _width, const int& _height)
+        void project_manager_gui::init(GLFWwindow *_window, const char *_glsl_version,const int& _width, const int& _height)
         {
             width_ = _width;
             height_ = _height;
@@ -37,10 +37,10 @@ namespace lpp
         }
 
 
-        void ugv_path_gui::render_button_section()
+        void project_manager_gui::render_button_section()
         {
             //ImGui::SetCursorPos(ImVec2(20, 20));
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7, 0.8, 0.8, 0.3));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.8f, 0.8f, 0.3f));
 
             //ImGui::SetCursorPosX(((width_)-width_/1.33333f) - (button_size_width_));
             ImGui::SetCursorPosX((width_*0.25f) - (button_size_width_/1.33333f));
@@ -74,12 +74,12 @@ namespace lpp
             create_project_popup();
         }
 
-        void ugv_path_gui::render_project_section()
+        void project_manager_gui::render_project_section()
         {
 
         }
 
-        void ugv_path_gui::on_create_project()
+        void project_manager_gui::on_create_project()
         {
             if (create_project_ == true)
             {
@@ -88,33 +88,58 @@ namespace lpp
             //create_project_popup();
         }
 
-        void ugv_path_gui::on_edit_project()
+        void project_manager_gui::on_edit_project()
         {
             ImGui::OpenPopup("edit_project_popup");
         }
 
-        void ugv_path_gui::on_export_time()
+        void project_manager_gui::on_export_time()
         {
             ImGui::OpenPopup("export_time_popup");
         }
 
-        void ugv_path_gui::export_time_popup()
+        void project_manager_gui::export_time_popup()
         {
             if (ImGui::BeginPopup("export_time_popup"))
             {
                 //export_times_implementation
+                ImGui::EndPopup();
             }
         }
 
-        void ugv_path_gui::edit_project_popup()
+        void project_manager_gui::edit_project_popup()
         {
             if (ImGui::BeginPopup("edit_project_popup"))
             {
                 //export_times_implementation
+                ImGui::EndPopup();
             }
         }
+        void project_manager_gui::on_create_project_button()
+        {
+            create_project_ = false;
 
-        void ugv_path_gui::create_project_popup()
+
+            auto found_iter = std::find_if(project_manager_.get_projects().begin(), project_manager_.get_projects().end(),
+                [&project_name_ = this->project_name_](project& _prj) {return std::string(_prj.name_.c_str()) == std::string(project_name_); });
+
+            if (found_iter == project_manager_.get_projects().end() && project_name_[0] != '\0')
+            {
+                project_manager_.get_projects().emplace_back(project(project_name_, 0, 0));
+                gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
+            }
+            else
+            {
+                gui_status_msgs_.push(GUI_STATUS::DUPLICATE_PROJECT_NAME);
+            }
+
+            std::memset(project_name_, '\0', PROJECT_NAME_MAX_LENGTH);
+
+            std::cout << "create button clicked" << '\n';
+            ImGui::CloseCurrentPopup();
+        }
+
+        void project_manager_gui::create_project_popup()
         {
             if (ImGui::BeginPopup("create_project_popup"))
             {
@@ -124,26 +149,7 @@ namespace lpp
 
                 if(ImGui::Button("Create"))
                 {
-                    create_project_ = false;
-
-                    
-                    auto found_iter = std::find_if(active_projects_.begin(), active_projects_.end(),
-                        [&project_name_ = this->project_name_](project& _prj) {return std::string(_prj.name_.c_str()) == std::string(project_name_); });
-                    
-                    if (found_iter == active_projects_.end() && project_name_[0] != '\0')
-                    {
-                        active_projects_.emplace_back(project(project_name_, 0, 0));
-                        gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
-                    }
-                    else
-                    {
-                        gui_status_msgs_.push(GUI_STATUS::DUPLICATE_PROJECT_NAME);
-                    }
-
-                    std::memset(project_name_, '\0', PROJECT_NAME_MAX_LENGTH);
-
-                    std::cout << "create button clicked" << '\n';
-                    ImGui::CloseCurrentPopup();
+                    on_create_project_button();
                 }
 
                 ImGui::EndPopup();
@@ -152,7 +158,7 @@ namespace lpp
             ImGui::SameLine();
         }
 
-        void ugv_path_gui::project_list_renderer()
+        void project_manager_gui::project_list_renderer()
         {
             const size_t max_columns = 2;//0-1
             const size_t max_rows = 10;
@@ -168,12 +174,18 @@ namespace lpp
             const std::string placeholder_worktime_project = "00:25:45";
             const std::string placeholder_overall_time_project = "23:12:00";
 
-            for (const auto& project : active_projects_)
+            auto sys_time_now = std::chrono::system_clock::now();
+
+           // auto worktime = std::format(project_manager_gui::time_format, sys_time_now.time_since_epoch());
+
+            for (const auto& prj : project_manager_.get_projects())
             {
-                project_text_ = project.name_ + '\n';
+                ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
+                project_text_ = prj.name_ + '\n';
                 project_text_ += placeholder_worktime_project + '\n';
+                //project_text_ += worktime + '\n';
                 project_text_ += placeholder_overall_time_project + '\n';
-                ImGui::SetCursorPos(ImVec2(column_offset + (current_column * column_offset) - (button_project_width_*1.2f), row_offset + (current_row * row_offset)));
+                ImGui::SetCursorPos(ImVec2(static_cast<float>(column_offset + (current_column * column_offset) - (button_project_width_*1.2f)),static_cast<float>( row_offset + (current_row * row_offset))));
                 if (ImGui::Button(project_text_.c_str(), ImVec2(button_project_width_, button_project_height_)))
                 {
                     
@@ -191,19 +203,18 @@ namespace lpp
                     //ImGui::SameLine();
                     current_column++;
                 }
+                ImGui::PopStyleColor();
             }
             
         }
 
-        void ugv_path_gui::on_project_button_active(const std::string_view& _project_name)
+        void project_manager_gui::on_project_button_active(const std::string_view& _project_name)
         {
-            auto iter = std::find_if(active_projects_.begin(), active_projects_.end(), 
+            auto iter = std::find_if(project_manager_.get_projects().begin(), project_manager_.get_projects().end(),
                 [&_project_name](project& _prj) { return _prj.name_ == _project_name; });
-
-
         }
 
-        void ugv_path_gui::status_msg_popup()
+        void project_manager_gui::status_msg_popup()
         {
             auto time = std::chrono::system_clock::now();
             if (!gui_status_msgs_.empty())
@@ -216,12 +227,12 @@ namespace lpp
 
                 switch (status_msg)
                 {
-                case lpp::ugv::GUI_STATUS::DUPLICATE_PROJECT_NAME:
+                case GUI_STATUS::DUPLICATE_PROJECT_NAME:
                     popup_text_color_ = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
                     popup_status_string_ = "Cannot create project - DUPLICATE PROJECT NAME";
                     std::cout << "DUPLICATE " << '\n';
                     break;
-                case lpp::ugv::GUI_STATUS::PROJECT_CREATE_SUCCESS:
+                case GUI_STATUS::PROJECT_CREATE_SUCCESS:
                     popup_text_color_ = ImVec4(0.2f, 1.0f, 0.2f, 1.0f);
                     popup_status_string_ = "Project created succesfully";
                     break;
@@ -238,19 +249,19 @@ namespace lpp
             
         }
 
-        void ugv_path_gui::render_popup_message()
+        void project_manager_gui::render_popup_message()
         {
             ImGui::SetCursorPos(ImVec2(10, height_ - 20.0f));
-            ImGui::BeginChild("status-popup", ImVec2(width_, 100));
+            ImGui::BeginChild("status-popup", ImVec2(static_cast<float>(width_), 100.0f));
             ImGui::TextColored(popup_text_color_, popup_status_string_.c_str());
 
             ImGui::EndChild();
 
         }
 
-        void ugv_path_gui::update()
+        void project_manager_gui::update()
         {
-            ImGui::SetWindowSize("Project manager", ImVec2(width_, height_-20.0f));
+            ImGui::SetWindowSize("Project manager", ImVec2(static_cast<float>(width_), static_cast<float>(height_-20.0f)));
 
             ImGui::SetWindowPos("Project manager", ImVec2(0, 0));
 
@@ -272,14 +283,14 @@ namespace lpp
             ImGui::PopStyleVar(1);
         }
 
-        void ugv_path_gui::new_frame()
+        void project_manager_gui::new_frame()
         {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
         }
 
-        void ugv_path_gui::shutdown()
+        void project_manager_gui::shutdown()
         {
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();
@@ -287,7 +298,7 @@ namespace lpp
             ImPlot::DestroyContext();
         }
 
-        void ugv_path_gui::render_ui()
+        void project_manager_gui::render_ui()
         {
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
