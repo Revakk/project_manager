@@ -7,11 +7,11 @@
 #include <thread>
 #include <iostream>
 
-namespace project_manager
+namespace pm
 {
     namespace gui
     {
-        void project_manager_app::init(GLFWwindow *_window, const char *_glsl_version,const int& _width, const int& _height)
+        void project_manager_gui::init(GLFWwindow *_window, const char *_glsl_version,const int& _width, const int& _height)
         {
             width_ = _width;
             height_ = _height;
@@ -37,7 +37,7 @@ namespace project_manager
         }
 
 
-        void project_manager_app::render_button_section()
+        void project_manager_gui::render_button_section()
         {
             //ImGui::SetCursorPos(ImVec2(20, 20));
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.8f, 0.8f, 0.3f));
@@ -74,12 +74,12 @@ namespace project_manager
             create_project_popup();
         }
 
-        void project_manager_app::render_project_section()
+        void project_manager_gui::render_project_section()
         {
 
         }
 
-        void project_manager_app::on_create_project()
+        void project_manager_gui::on_create_project()
         {
             if (create_project_ == true)
             {
@@ -88,33 +88,58 @@ namespace project_manager
             //create_project_popup();
         }
 
-        void project_manager_app::on_edit_project()
+        void project_manager_gui::on_edit_project()
         {
             ImGui::OpenPopup("edit_project_popup");
         }
 
-        void project_manager_app::on_export_time()
+        void project_manager_gui::on_export_time()
         {
             ImGui::OpenPopup("export_time_popup");
         }
 
-        void project_manager_app::export_time_popup()
+        void project_manager_gui::export_time_popup()
         {
             if (ImGui::BeginPopup("export_time_popup"))
             {
                 //export_times_implementation
+                ImGui::EndPopup();
             }
         }
 
-        void project_manager_app::edit_project_popup()
+        void project_manager_gui::edit_project_popup()
         {
             if (ImGui::BeginPopup("edit_project_popup"))
             {
                 //export_times_implementation
+                ImGui::EndPopup();
             }
         }
+        void project_manager_gui::on_create_project_button()
+        {
+            create_project_ = false;
 
-        void project_manager_app::create_project_popup()
+
+            auto found_iter = std::find_if(project_manager_.get_projects().begin(), project_manager_.get_projects().end(),
+                [&project_name_ = this->project_name_](project& _prj) {return std::string(_prj.name_.c_str()) == std::string(project_name_); });
+
+            if (found_iter == project_manager_.get_projects().end() && project_name_[0] != '\0')
+            {
+                project_manager_.get_projects().emplace_back(project(project_name_, 0, 0));
+                gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
+            }
+            else
+            {
+                gui_status_msgs_.push(GUI_STATUS::DUPLICATE_PROJECT_NAME);
+            }
+
+            std::memset(project_name_, '\0', PROJECT_NAME_MAX_LENGTH);
+
+            std::cout << "create button clicked" << '\n';
+            ImGui::CloseCurrentPopup();
+        }
+
+        void project_manager_gui::create_project_popup()
         {
             if (ImGui::BeginPopup("create_project_popup"))
             {
@@ -124,26 +149,7 @@ namespace project_manager
 
                 if(ImGui::Button("Create"))
                 {
-                    create_project_ = false;
-
-                    
-                    auto found_iter = std::find_if(active_projects_.begin(), active_projects_.end(),
-                        [&project_name_ = this->project_name_](project& _prj) {return std::string(_prj.name_.c_str()) == std::string(project_name_); });
-                    
-                    if (found_iter == active_projects_.end() && project_name_[0] != '\0')
-                    {
-                        active_projects_.emplace_back(project(project_name_, 0, 0));
-                        gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
-                    }
-                    else
-                    {
-                        gui_status_msgs_.push(GUI_STATUS::DUPLICATE_PROJECT_NAME);
-                    }
-
-                    std::memset(project_name_, '\0', PROJECT_NAME_MAX_LENGTH);
-
-                    std::cout << "create button clicked" << '\n';
-                    ImGui::CloseCurrentPopup();
+                    on_create_project_button();
                 }
 
                 ImGui::EndPopup();
@@ -152,7 +158,7 @@ namespace project_manager
             ImGui::SameLine();
         }
 
-        void project_manager_app::project_list_renderer()
+        void project_manager_gui::project_list_renderer()
         {
             const size_t max_columns = 2;//0-1
             const size_t max_rows = 10;
@@ -170,11 +176,12 @@ namespace project_manager
 
             auto sys_time_now = std::chrono::system_clock::now();
 
-           // auto worktime = std::format(project_manager_app::time_format, sys_time_now.time_since_epoch());
+           // auto worktime = std::format(project_manager_gui::time_format, sys_time_now.time_since_epoch());
 
-            for (const auto& project : active_projects_)
+            for (const auto& prj : project_manager_.get_projects())
             {
-                project_text_ = project.name_ + '\n';
+                ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
+                project_text_ = prj.name_ + '\n';
                 project_text_ += placeholder_worktime_project + '\n';
                 //project_text_ += worktime + '\n';
                 project_text_ += placeholder_overall_time_project + '\n';
@@ -196,19 +203,18 @@ namespace project_manager
                     //ImGui::SameLine();
                     current_column++;
                 }
+                ImGui::PopStyleColor();
             }
             
         }
 
-        void project_manager_app::on_project_button_active(const std::string_view& _project_name)
+        void project_manager_gui::on_project_button_active(const std::string_view& _project_name)
         {
-            auto iter = std::find_if(active_projects_.begin(), active_projects_.end(), 
+            auto iter = std::find_if(project_manager_.get_projects().begin(), project_manager_.get_projects().end(),
                 [&_project_name](project& _prj) { return _prj.name_ == _project_name; });
-
-
         }
 
-        void project_manager_app::status_msg_popup()
+        void project_manager_gui::status_msg_popup()
         {
             auto time = std::chrono::system_clock::now();
             if (!gui_status_msgs_.empty())
@@ -243,7 +249,7 @@ namespace project_manager
             
         }
 
-        void project_manager_app::render_popup_message()
+        void project_manager_gui::render_popup_message()
         {
             ImGui::SetCursorPos(ImVec2(10, height_ - 20.0f));
             ImGui::BeginChild("status-popup", ImVec2(static_cast<float>(width_), 100.0f));
@@ -253,7 +259,7 @@ namespace project_manager
 
         }
 
-        void project_manager_app::update()
+        void project_manager_gui::update()
         {
             ImGui::SetWindowSize("Project manager", ImVec2(static_cast<float>(width_), static_cast<float>(height_-20.0f)));
 
@@ -277,14 +283,14 @@ namespace project_manager
             ImGui::PopStyleVar(1);
         }
 
-        void project_manager_app::new_frame()
+        void project_manager_gui::new_frame()
         {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
         }
 
-        void project_manager_app::shutdown()
+        void project_manager_gui::shutdown()
         {
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();
@@ -292,7 +298,7 @@ namespace project_manager
             ImPlot::DestroyContext();
         }
 
-        void project_manager_app::render_ui()
+        void project_manager_gui::render_ui()
         {
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

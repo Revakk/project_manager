@@ -9,7 +9,7 @@ enable_testing()
 
 include_directories(include)
 
-SET(HEADERS include/project_manager_gui.hpp)
+SET(HEADERS include/project_manager_gui.hpp include/common.hpp include/project.hpp include/project_manager.hpp include/utilities.hpp)
 
 SET(SOURCES src/main.cpp src/project_manager_gui.cpp src/glad.c)
 

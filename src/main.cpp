@@ -4,7 +4,7 @@
 #include "GLFW/glfw3.h"
 #include "project_manager_gui.hpp"
 
-using namespace project_manager;
+using namespace pm;
 using namespace gui;
 
 int main(int, char**) 
@@ -39,7 +39,7 @@ int main(int, char**)
 	glfwGetFramebufferSize(window, &screen_width, &screen_height);
 	glViewport(0, 0, screen_width, screen_height);
 
-	project_manager_app myimgui;
+	project_manager_gui myimgui;
 	myimgui.init(window, glsl_version,width,height);
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
