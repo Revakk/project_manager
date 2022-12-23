@@ -21,11 +21,11 @@ inline ImVec4 random_color()
 struct project
 {
     std::string name_ = "";
-    std::time_t current_instance_time_ = {};
-    std::time_t overall_time_ = {};
+    std::chrono::microseconds current_instance_time_ = {};
+    std::chrono::microseconds overall_time_ = {};
     ImVec4 color_ = random_color();
-    size_t id_;
-    std::chrono::time_point<std::chrono::system_clock> last_time_check = std::chrono::system_clock::now();
+    size_t id_ = 0;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_time_check = std::chrono::high_resolution_clock::now();
     bool currently_active_ = false;
     
 };

@@ -23,7 +23,8 @@ namespace pm
             ImGuiIO &io = ImGui::GetIO();
             //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
             // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-            io.Fonts->AddFontFromFileTTF("fonts/active_font.ttf", 15);
+            //io.Fonts->AddFontFromFileTTF("fonts/active_font.ttf", 15);
+            io.Fonts->AddFontFromFileTTF("C:\\dev\\repos\\project_manager\\build\\Release\\fonts\\active_font.ttf", 18);
 
             //io.DeltaTime = 10.0f;
            // std::thread path_controller_thread();
@@ -31,8 +32,6 @@ namespace pm
             ImGui_ImplGlfw_InitForOpenGL(_window, true);
             ImGui_ImplOpenGL3_Init(_glsl_version);
             ImGui::StyleColorsDark();
-
-            
             //ImGuiStyleVar_FrameRounding;
         }
 
@@ -84,6 +83,8 @@ namespace pm
             if (create_project_ == true)
             {
                 ImGui::OpenPopup("create_project_popup");
+
+                ImGui::EndPopup();
             }
             //create_project_popup();
         }
@@ -125,7 +126,8 @@ namespace pm
 
             if (found_iter == project_manager_.get_projects().end() && project_name_[0] != '\0')
             {
-                project_manager_.get_projects().emplace_back(project(project_name_, 0, 0));
+                //project_manager_.get_projects().emplace_back(project(project_name_, std::chrono::milliseconds(0), std::chrono::milliseconds(0)));
+                project_manager_.add_project(project_name_,current_button_color_);
                 gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
             }
             else
@@ -146,14 +148,13 @@ namespace pm
                 ImGui::Text("Project name");
                 ImGui::SameLine();
                 ImGui::InputText("", project_name_, PROJECT_NAME_MAX_LENGTH);
-
+                show_color_picker();
                 if(ImGui::Button("Create"))
                 {
                     on_create_project_button();
                 }
 
                 ImGui::EndPopup();
-
             }
             ImGui::SameLine();
         }
@@ -181,16 +182,17 @@ namespace pm
             for (const auto& prj : project_manager_.get_projects())
             {
                 ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImU32(IM_COL32_BLACK));
+                std::string project_name = prj.name_;
                 project_text_ = prj.name_ + '\n';
-                project_text_ += placeholder_worktime_project + '\n';
+                //project_text_ += placeholder_worktime_project + '\n';
+                project_text_ += project_manager_.project_instance_time(prj.id_) + '\n';
                 //project_text_ += worktime + '\n';
-                project_text_ += placeholder_overall_time_project + '\n';
+                project_text_ += project_manager_.project_overall_time(prj.id_) + '\n';
                 ImGui::SetCursorPos(ImVec2(static_cast<float>(column_offset + (current_column * column_offset) - (button_project_width_*1.2f)),static_cast<float>( row_offset + (current_row * row_offset))));
                 if (ImGui::Button(project_text_.c_str(), ImVec2(button_project_width_, button_project_height_)))
                 {
-                    
-
-                    on_project_button_active(project_text_);
+                    on_project_button_active(project_name);
                 }
                 substract_var *= 2.0f;
                 if (current_column == max_columns)
@@ -203,7 +205,7 @@ namespace pm
                     //ImGui::SameLine();
                     current_column++;
                 }
-                ImGui::PopStyleColor();
+                ImGui::PopStyleColor(2);
             }
             
         }
@@ -212,14 +214,18 @@ namespace pm
         {
             auto iter = std::find_if(project_manager_.get_projects().begin(), project_manager_.get_projects().end(),
                 [&_project_name](project& _prj) { return _prj.name_ == _project_name; });
+           
+            std::size_t index = std::distance(std::begin(project_manager_.get_projects()), iter);
+            std::cout << "trying to set active project:" << index <<'\n';
+            project_manager_.set_active_project(index);
         }
 
         void project_manager_gui::status_msg_popup()
         {
-            auto time = std::chrono::system_clock::now();
+            auto time = std::chrono::high_resolution_clock::now();
             if (!gui_status_msgs_.empty())
             {
-                popup_start_time_ = std::chrono::system_clock::to_time_t(time);
+                //popup_start_time_ = std::chrono::duration_cast<std::chrono::microseconds>(now);
                 popup_decay_time_ = popup_start_time_;
 
                 auto status_msg = gui_status_msgs_.front();
@@ -239,28 +245,29 @@ namespace pm
                 default:
                     break;
                 }
+
+                popup_tp_ = std::chrono::high_resolution_clock::now();
             }
             else
             {
                 //popup_decay_time_ = std::time_t{ 0 };
             }
-
-
-            
         }
 
         void project_manager_gui::render_popup_message()
         {
             ImGui::SetCursorPos(ImVec2(10, height_ - 20.0f));
             ImGui::BeginChild("status-popup", ImVec2(static_cast<float>(width_), 100.0f));
+
+
             ImGui::TextColored(popup_text_color_, popup_status_string_.c_str());
 
             ImGui::EndChild();
-
         }
 
         void project_manager_gui::update()
         {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f)); // Set 
             ImGui::SetWindowSize("Project manager", ImVec2(static_cast<float>(width_), static_cast<float>(height_-20.0f)));
 
             ImGui::SetWindowPos("Project manager", ImVec2(0, 0));
@@ -274,6 +281,8 @@ namespace pm
             render_button_section();
             project_list_renderer();
 
+            project_manager_.update_time();
+
             status_msg_popup();
             
             ImGui::End();
@@ -281,6 +290,7 @@ namespace pm
 
            // ImGui::ShowDemoWindow();
             ImGui::PopStyleVar(1);
+            ImGui::PopStyleColor();
         }
 
         void project_manager_gui::new_frame()
@@ -302,6 +312,11 @@ namespace pm
         {
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+
+        void project_manager_gui::show_color_picker() {
+            //static ImVec4 color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            ImGui::ColorPicker3("Color", (float*)&current_button_color_);
         }
     }
 } //namespace lpp

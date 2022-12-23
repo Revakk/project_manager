@@ -9,9 +9,9 @@ enable_testing()
 
 include_directories(include)
 
-SET(HEADERS include/project_manager_gui.hpp include/common.hpp include/project.hpp include/project_manager.hpp include/utilities.hpp)
+SET(HEADERS include/project_manager_gui.hpp include/common.hpp include/project.hpp include/project_manager.hpp include/utilities.hpp include/save_file_manager.hpp)
 
-SET(SOURCES src/main.cpp src/project_manager_gui.cpp src/glad.c)
+SET(SOURCES src/main.cpp src/project_manager_gui.cpp src/glad.c src/project_manager.cpp)
 
 
 find_package(glfw3 CONFIG REQUIRED)

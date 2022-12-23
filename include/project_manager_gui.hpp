@@ -56,6 +56,7 @@ namespace pm
 
             void on_project_button_active(const std::string_view& _project_name);
             void on_create_project_button();
+            void show_color_picker();
 
         private:
             const float button_size_width_ = 125.0f;
@@ -83,11 +84,12 @@ namespace pm
             char project_name_[PROJECT_NAME_MAX_LENGTH]{};
             std::queue<GUI_STATUS> gui_status_msgs_ = {};
 
-            std::time_t popup_decay_time_ = std::time_t{0};
-            std::time_t popup_start_time_ = std::time_t{ 0 };
+            std::chrono::steady_clock::time_point popup_tp_{};
+            std::chrono::microseconds popup_decay_time_ = {};
+            std::chrono::microseconds popup_start_time_ = {};
             std::string popup_status_string_{};
             ImVec4 popup_text_color_ = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
+            ImVec4 current_button_color_ = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 
             static constexpr const char* time_format = "{:%Y/%m/%d%H:%M:%S}";
 
