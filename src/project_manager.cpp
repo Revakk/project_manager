@@ -71,7 +71,7 @@ std::string project_manager::project_overall_time(size_t _project_id)
 
 bool project_manager::add_project(std::string _project_name,ImVec4 _color)
 {
-	projects_.emplace_back(project(_project_name, std::chrono::microseconds(0), std::chrono::microseconds(100000000000000000),_color,projects_.size()));
+	projects_.emplace_back(project(_project_name, std::chrono::microseconds(0), std::chrono::microseconds(0),_color,projects_.size()));
 	return true;
 }
 
