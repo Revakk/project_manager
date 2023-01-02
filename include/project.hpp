@@ -27,8 +27,9 @@ struct project
     size_t id_ = 0;
     std::chrono::time_point<std::chrono::high_resolution_clock> last_time_check = std::chrono::high_resolution_clock::now();
     bool currently_active_ = false;
-    
+    std::string description_ = "";
 };
+
 
 enum class PROJECT_ACTION
 {

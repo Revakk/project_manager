@@ -24,7 +24,8 @@ namespace pm
             //io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
             // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
             //io.Fonts->AddFontFromFileTTF("fonts/active_font.ttf", 15);
-            io.Fonts->AddFontFromFileTTF("C:\\dev\\repos\\project_manager\\build\\Release\\fonts\\active_font.ttf", 18);
+            //io.Fonts->AddFontFromFileTTF("C:\\dev\\repos\\project_manager\\build\\Release\\fonts\\OpenSans-Bold.ttf", 18);
+            io.Fonts->AddFontFromFileTTF("fonts\\OpenSans-Bold.ttf", 18);
 
             //io.DeltaTime = 10.0f;
            // std::thread path_controller_thread();
@@ -53,7 +54,7 @@ namespace pm
             //ImGui::SetCursorPosX(((width_)-width_ / 2.0f) - (button_size_width_ / 2.0f));
             ImGui::SetCursorPosX((width_ * 0.5f) - (button_size_width_ / 2.0f));
             ImGui::SetCursorPosY(20);
-            if (ImGui::Button("EXPORT TIMES", ImVec2(button_size_width_, button_size_height_)))
+            if (ImGui::Button("EXPORT/LOAD\n        TIMES", ImVec2(button_size_width_, button_size_height_)))
             {
                 on_export_time();
             }
@@ -103,6 +104,8 @@ namespace pm
         {
             if (ImGui::BeginPopup("export_time_popup"))
             {
+                if (ImGui::Button("Export"));
+                if (ImGui::Button("Load"));
                 //export_times_implementation
                 ImGui::EndPopup();
             }
@@ -136,6 +139,7 @@ namespace pm
             }
 
             std::memset(project_name_, '\0', PROJECT_NAME_MAX_LENGTH);
+            std::memset(project_desc_, '\0', PROJECT_DESC_MAX_LENGTH);
 
             std::cout << "create button clicked" << '\n';
             ImGui::CloseCurrentPopup();
@@ -147,8 +151,10 @@ namespace pm
             {
                 ImGui::Text("Project name");
                 ImGui::SameLine();
-                ImGui::InputText("", project_name_, PROJECT_NAME_MAX_LENGTH);
+                ImGui::InputText("##", project_name_, PROJECT_NAME_MAX_LENGTH);
                 show_color_picker();
+                ImGui::InputTextMultiline("###", project_desc_, PROJECT_DESC_MAX_LENGTH, ImVec2(300, 100));
+                //ImGui::InputText("###", project_desc_, PROJECT_DESC_MAX_LENGTH);
                 if(ImGui::Button("Create"))
                 {
                     on_create_project_button();
@@ -171,26 +177,38 @@ namespace pm
             size_t current_column = 0;
             size_t current_row = 0;
 
-            std::string project_text_ = "";
-            const std::string placeholder_worktime_project = "00:25:45";
-            const std::string placeholder_overall_time_project = "23:12:00";
-
+            std::string project_text = "";
             auto sys_time_now = std::chrono::system_clock::now();
 
            // auto worktime = std::format(project_manager_gui::time_format, sys_time_now.time_since_epoch());
 
-            for (const auto& prj : project_manager_.get_projects())
+            for (size_t i = 0;const auto& prj : project_manager_.get_projects())
             {
-                ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImU32(IM_COL32_BLACK));
+                if (project_manager_.get_active_project_id() == i)
+                {
+                    //ImGui::PushTextWrapPos(5.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.1f, 0.1f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImU32(IM_COL32_WHITE));
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.8f, 0.8f, 0.8f, 0.8f));
+                }
+                else
+                {
+                    //ImGui::PushTextWrapPos(5.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.1f, 0.1f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImU32(IM_COL32_BLACK));
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.2f, 0.2f, 0.2f, 4.0f));
+                }
+                
                 std::string project_name = prj.name_;
-                project_text_ = prj.name_ + '\n';
-                //project_text_ += placeholder_worktime_project + '\n';
-                project_text_ += project_manager_.project_instance_time(prj.id_) + '\n';
-                //project_text_ += worktime + '\n';
-                project_text_ += project_manager_.project_overall_time(prj.id_) + '\n';
+                project_text = project_manager_.get_project_string(i);
+
                 ImGui::SetCursorPos(ImVec2(static_cast<float>(column_offset + (current_column * column_offset) - (button_project_width_*1.2f)),static_cast<float>( row_offset + (current_row * row_offset))));
-                if (ImGui::Button(project_text_.c_str(), ImVec2(button_project_width_, button_project_height_)))
+                ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 100.0f);
+                if (ImGui::Button(project_text.c_str(), ImVec2(button_project_width_, button_project_height_)))
                 {
                     on_project_button_active(project_name);
                 }
@@ -205,7 +223,10 @@ namespace pm
                     //ImGui::SameLine();
                     current_column++;
                 }
-                ImGui::PopStyleColor(2);
+                ImGui::PopStyleColor(3);
+                ImGui::PopStyleVar(2);
+                ImGui::PopTextWrapPos();
+                i++;
             }
             
         }
@@ -225,7 +246,7 @@ namespace pm
             auto time = std::chrono::high_resolution_clock::now();
             if (!gui_status_msgs_.empty())
             {
-                //popup_start_time_ = std::chrono::duration_cast<std::chrono::microseconds>(now);
+                popup_start_time_ = std::chrono::duration_cast<std::chrono::microseconds>(time.time_since_epoch());
                 popup_decay_time_ = popup_start_time_;
 
                 auto status_msg = gui_status_msgs_.front();
@@ -256,23 +277,38 @@ namespace pm
 
         void project_manager_gui::render_popup_message()
         {
-            ImGui::SetCursorPos(ImVec2(10, height_ - 20.0f));
-            ImGui::BeginChild("status-popup", ImVec2(static_cast<float>(width_), 100.0f));
+            ImGui::SetCursorPos(ImVec2(0, height_ - 22.0f));
+            ImGui::BeginChild("status-popup", ImVec2(static_cast<float>(width_), 22.0f),true,window_flags_);
+            ImGui::SetCursorPos(ImVec2(5.0f, 0.0f));
+            auto time_now = std::chrono::high_resolution_clock::now();
 
+            auto time_difference = std::chrono::duration_cast<std::chrono::seconds>(time_now - popup_tp_);
+
+            std::cout << time_difference.count() << '\n';
+
+            if (time_difference.count() < 5)
+            {
+                popup_text_color_.w = 1.0f-(static_cast<float>(time_difference.count())/5.0f);
+            }
+            else
+            {
+                popup_text_color_.w = 0.0f;
+            }
+            
 
             ImGui::TextColored(popup_text_color_, popup_status_string_.c_str());
 
-            ImGui::EndChild();
+           ImGui::EndChild();
         }
 
         void project_manager_gui::update()
         {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, 1.0f)); // Set 
-            ImGui::SetWindowSize("Project manager", ImVec2(static_cast<float>(width_), static_cast<float>(height_-20.0f)));
+            ImGui::SetWindowSize("Project manager", ImVec2(static_cast<float>(width_), static_cast<float>(height_)));
 
             ImGui::SetWindowPos("Project manager", ImVec2(0, 0));
 
-            window_flags_ = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar;
+            window_flags_ = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 
             ImGuiStyleVar style = ImGuiStyleVar_FrameRounding;
             ImGui::PushStyleVar(style, 12);
@@ -285,12 +321,13 @@ namespace pm
 
             status_msg_popup();
             
-            ImGui::End();
+            
             render_popup_message();
 
            // ImGui::ShowDemoWindow();
             ImGui::PopStyleVar(1);
             ImGui::PopStyleColor();
+            ImGui::End();
         }
 
         void project_manager_gui::new_frame()
@@ -312,11 +349,12 @@ namespace pm
         {
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            //std::this_thread::sleep_for(std::chrono::duration<float>(0.033f));
         }
 
         void project_manager_gui::show_color_picker() {
             //static ImVec4 color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-            ImGui::ColorPicker3("Color", (float*)&current_button_color_);
+            ImGui::ColorPicker3("Color", reinterpret_cast<float*>(& current_button_color_));
         }
     }
 } //namespace lpp

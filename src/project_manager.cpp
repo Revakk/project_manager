@@ -2,8 +2,13 @@
 #include <chrono>
 #include <iostream>
 
-void project_manager::set_active_project(const int _id)
+void project_manager::set_active_project(const size_t _id)
 {
+	if (active_project_.has_value())
+	{
+		reset_instance_time(active_project_.value());
+	}
+	
 	if (active_project_.has_value() && _id == active_project_.value())
 	{
 		std::cout << "DEACTIVATING PROJECT " << _id << '\n';
@@ -66,7 +71,7 @@ std::string project_manager::project_overall_time(size_t _project_id)
 
 bool project_manager::add_project(std::string _project_name,ImVec4 _color)
 {
-	projects_.emplace_back(project(_project_name, std::chrono::microseconds(0), std::chrono::microseconds(0),_color,projects_.size()));
+	projects_.emplace_back(project(_project_name, std::chrono::microseconds(0), std::chrono::microseconds(100000000000000000),_color,projects_.size()));
 	return true;
 }
 
@@ -80,4 +85,28 @@ std::string project_manager::project_time_to_string(std::chrono::microseconds _d
 
 	return std::to_string(hours) + ":" + std::to_string(minutes) + ":" +
 		std::to_string(seconds);
+}
+
+void project_manager::reset_instance_time(size_t _id)
+{
+	projects_[_id].current_instance_time_ = std::chrono::microseconds(0);
+}
+
+std::string project_manager::get_project_string(size_t _idx)
+{
+	if (!projects_.empty())
+	{
+		auto prj = projects_.at(_idx);
+
+		std::string project_text_ = "";
+		project_text_ = prj.name_ + '\n';
+		if (active_project_.has_value() && active_project_.value() == _idx)
+		{
+			project_text_ += project_instance_time(_idx) + '\n';
+		}
+		project_text_ += project_overall_time(_idx) + '\n';
+
+		return project_text_;
+	}
+	
 }

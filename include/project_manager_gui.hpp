@@ -5,6 +5,7 @@
 
 
 constexpr size_t PROJECT_NAME_MAX_LENGTH = 25;
+constexpr size_t PROJECT_DESC_MAX_LENGTH = 125;
 
 namespace pm
 {
@@ -74,7 +75,7 @@ namespace pm
             bool export_time_ = false;
 
             int width_ = 600;
-            int height_ = 800;
+            int height_ = 700;
 
            
 
@@ -82,6 +83,7 @@ namespace pm
             //std::vector<project> active_projects_ = {};
 
             char project_name_[PROJECT_NAME_MAX_LENGTH]{};
+            char project_desc_[PROJECT_DESC_MAX_LENGTH]{};
             std::queue<GUI_STATUS> gui_status_msgs_ = {};
 
             std::chrono::steady_clock::time_point popup_tp_{};

@@ -30,7 +30,7 @@ int main(int, char**)
 	if (window == NULL)
 		return 1;
 	glfwMakeContextCurrent(window);
-	//glfwSwapInterval(3); // Enable vsync
+	glfwSwapInterval(1); // Enable vsync
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))  // tie window context to glad's opengl funcs
 		throw("Unable to context to OpenGL");
