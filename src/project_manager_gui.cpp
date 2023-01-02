@@ -113,8 +113,66 @@ namespace pm
 
         void project_manager_gui::edit_project_popup()
         {
+            ImGui::SetNextWindowPos(ImVec2(35, 80));
             if (ImGui::BeginPopup("edit_project_popup"))
             {
+                ImGui::Spacing();
+                ImGui::BeginTable("projects edit", 7, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings| ImGuiTableFlags_Borders);
+                
+                ImGui::TableNextColumn();
+                ImGui::Text("Project");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Date Created");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Time");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Color");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Description");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Info");
+
+                ImGui::TableNextColumn();
+                ImGui::Text("Delete");
+                
+               
+                for (auto& a : project_manager_.get_projects())
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+
+                    ImGui::TableNextColumn();
+                    //ImGui::Text("Project");
+                    ImGui::Text(a.name_.c_str());
+                }
+                ImGui::EndTable();
                 //export_times_implementation
                 ImGui::EndPopup();
             }
