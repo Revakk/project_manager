@@ -87,6 +87,17 @@ std::string project_manager::project_time_to_string(std::chrono::microseconds _d
 		std::to_string(seconds);
 }
 
+void project_manager::delete_project(const size_t _id)
+{
+	auto it = projects_.erase(projects_.begin()+_id);
+	std::cout << _id << '\n';
+
+	for (auto& iter = it; iter != projects_.end(); iter++)
+	{
+		(*it).id_ -= 1;
+	}
+}
+
 void project_manager::reset_instance_time(size_t _id)
 {
 	projects_[_id].current_instance_time_ = std::chrono::microseconds(0);

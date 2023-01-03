@@ -28,6 +28,7 @@ public:
 	bool add_project(const std::string _project_name,const ImVec4 _color,const std::string _desc);
 	std::string get_project_string(const size_t _idx) const;
 	std::string project_time_to_string(std::chrono::microseconds _duration) const;
+	void delete_project(const size_t _id);
 
 private:
 	
