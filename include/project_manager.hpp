@@ -3,6 +3,14 @@
 #include <unordered_map>
 #include<span>
 
+enum class string_specifier : uint8_t
+{
+	BUTTON_LABEL_ACTIVE,
+	BUTTON_LABEL_INACTIVE,
+
+};
+
+
 class project_manager
 {
 public:
@@ -15,14 +23,15 @@ public:
 	{
 		return {projects_.data(),projects_.size()};
 	}
-	std::string project_instance_time(size_t _project_id);
-	std::string project_overall_time(size_t _project_id);
-	bool add_project(std::string _project_name,ImVec4 _color);
-	std::string get_project_string(size_t _idx);
+	std::string project_instance_time(const size_t _project_id) const;
+	std::string project_overall_time(const size_t _project_id) const;
+	bool add_project(const std::string _project_name,const ImVec4 _color,const std::string _desc);
+	std::string get_project_string(const size_t _idx) const;
+	std::string project_time_to_string(std::chrono::microseconds _duration) const;
 
 private:
-	std::string project_time_to_string(std::chrono::microseconds _duration);
-	void reset_instance_time(size_t _id);
+	
+	void reset_instance_time(const size_t _id);
 
 private:
 	std::vector<project> projects_;

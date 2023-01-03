@@ -47,7 +47,7 @@ void project_manager::update_time()
 	}
 }
 
-std::string project_manager::project_instance_time(size_t _project_id)
+std::string project_manager::project_instance_time(const size_t _project_id)const
 {
 	if (!projects_.empty())
 	{
@@ -58,7 +58,7 @@ std::string project_manager::project_instance_time(size_t _project_id)
 	return std::string();
 }
 
-std::string project_manager::project_overall_time(size_t _project_id)
+std::string project_manager::project_overall_time(const size_t _project_id)const
 {
 	if (!projects_.empty())
 	{
@@ -69,13 +69,13 @@ std::string project_manager::project_overall_time(size_t _project_id)
 	return std::string();
 }
 
-bool project_manager::add_project(std::string _project_name,ImVec4 _color)
+bool project_manager::add_project(const std::string _project_name,const ImVec4 _color,const std::string _desc)
 {
-	projects_.emplace_back(project(_project_name, std::chrono::microseconds(0), std::chrono::microseconds(0),_color,projects_.size()));
+	projects_.emplace_back(project(_project_name, std::chrono::microseconds(0), std::chrono::microseconds(0),_color,projects_.size(),_desc));
 	return true;
 }
 
-std::string project_manager::project_time_to_string(std::chrono::microseconds _duration)
+std::string project_manager::project_time_to_string(std::chrono::microseconds _duration)const 
 {
 	auto hours = std::chrono::duration_cast<std::chrono::hours>(_duration).count();
 	_duration -= std::chrono::hours(hours);
@@ -92,7 +92,7 @@ void project_manager::reset_instance_time(size_t _id)
 	projects_[_id].current_instance_time_ = std::chrono::microseconds(0);
 }
 
-std::string project_manager::get_project_string(size_t _idx)
+std::string project_manager::get_project_string(const size_t _idx)const
 {
 	if (!projects_.empty())
 	{
