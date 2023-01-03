@@ -206,7 +206,11 @@ namespace pm
                     }
 
                     ImGui::TableNextColumn();//delete
-                    if (ImGui::Button("X", ImVec2(25, 20)));
+                    std::string button_label = "X##" + std::to_string(i);
+                    if (ImGui::Button(button_label.c_str(), ImVec2(25, 20)))
+                    {
+                        project_manager_.delete_project(i);
+                    }
                     i++;
                 }
                 ImGui::EndTable();
