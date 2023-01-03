@@ -113,11 +113,11 @@ namespace pm
 
         void project_manager_gui::edit_project_popup()
         {
-            ImGui::SetNextWindowPos(ImVec2(35, 80));
+            ImGui::SetNextWindowPos(ImVec2(30, 80));
             if (ImGui::BeginPopup("edit_project_popup"))
             {
                 ImGui::Spacing();
-                ImGui::BeginTable("projects edit", 7, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings| ImGuiTableFlags_Borders);
+                ImGui::BeginTable("projects edit", 6, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings| ImGuiTableFlags_Borders);
                 
                 ImGui::TableNextColumn();
                 ImGui::Text("Project");
@@ -135,42 +135,79 @@ namespace pm
                 ImGui::Text("Description");
 
                 ImGui::TableNextColumn();
-                ImGui::Text("Info");
-
-                ImGui::TableNextColumn();
-                ImGui::Text("Delete");
+                ImGui::Text("Del");
                 
                
-                for (auto& a : project_manager_.get_projects())
+                for (size_t i = 0; const auto & prj : project_manager_.get_projects())
                 {
-                    ImGui::TableNextRow();
+                    ImGui::TableNextRow();   //project name
                     ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    //ImGui::Text(prj.name_.c_str());
+                    if (ImGui::CalcTextSize(prj.name_.c_str()).x > 8)
+                    {
+                        std::string first_str = prj.name_.substr(0, 4);
+                        std::string text_str = first_str + "...";
+                        ImGui::Text(text_str.c_str());
+                        if (ImGui::IsItemHovered())
+                        {
+                            ImGui::BeginTooltip();
+                            ImGui::Text(prj.name_.c_str());
+                            ImGui::EndTooltip();
+                        }
+                    }
+                    else
+                    {
+                        ImGui::Text(prj.description_.c_str());
+                    }
 
-                    ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    ImGui::TableNextColumn();//date created
+                    std::time_t date_created = std::chrono::system_clock::to_time_t(prj.time_created);
+                    ImGui::Text(std::ctime(&date_created));
 
-                    ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    ImGui::TableNextColumn();//time
+                    ImGui::Text(project_manager_.project_time_to_string(prj.overall_time_).c_str());
 
-                    ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    ImGuiStyleVar style = ImGuiStyleVar_FrameRounding;
+                    ImGui::PushStyleVar(style, 0);
 
-                    ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    ImGui::PushStyleColor(ImGuiCol_Button, prj.color_);
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, prj.color_);
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, prj.color_);
 
-                    ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    ImGui::TableNextColumn();//color
+                    ImGui::Button(" ", ImVec2(35, 20));
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor(3);
 
-                    ImGui::TableNextColumn();
-                    //ImGui::Text("Project");
-                    ImGui::Text(a.name_.c_str());
+                    ImGui::TableNextColumn();//description
+                    if (ImGui::CalcTextSize(prj.name_.c_str()).x > 11)
+                    {
+                        std::string first_str = prj.description_.substr(0, 8);
+                        std::string text_str = first_str + "...";
+                        ImGui::Text(text_str.c_str());
+                    }
+                    if (ImGui::IsItemHovered())
+                    {
+                        ImGui::BeginTooltip();
+                        if (prj.description_.size() <= PROJECT_DESC_MAX_LENGTH / 3)
+                        {
+                            ImGui::Text(prj.description_.c_str());
+                        }
+                        else if (prj.description_.size() <= 2 * (PROJECT_DESC_MAX_LENGTH / 3))
+                        {
+                            ImGui::Text(format_desc_string(prj.description_,2).c_str());
+                        }
+                        else
+                        {
+                            ImGui::Text(format_desc_string(prj.description_, 3).c_str());
+                        }
+                        
+                        ImGui::EndTooltip();
+                    }
+
+                    ImGui::TableNextColumn();//delete
+                    if (ImGui::Button("X", ImVec2(25, 20)));
+                    i++;
                 }
                 ImGui::EndTable();
                 //export_times_implementation
@@ -188,7 +225,7 @@ namespace pm
             if (found_iter == project_manager_.get_projects().end() && project_name_[0] != '\0')
             {
                 //project_manager_.get_projects().emplace_back(project(project_name_, std::chrono::milliseconds(0), std::chrono::milliseconds(0)));
-                project_manager_.add_project(project_name_,current_button_color_);
+                project_manager_.add_project(project_name_,current_button_color_,project_desc_);
                 gui_status_msgs_.push(GUI_STATUS::PROJECT_CREATE_SUCCESS);
             }
             else
@@ -199,7 +236,7 @@ namespace pm
             std::memset(project_name_, '\0', PROJECT_NAME_MAX_LENGTH);
             std::memset(project_desc_, '\0', PROJECT_DESC_MAX_LENGTH);
 
-            std::cout << "create button clicked" << '\n';
+            //std::cout << "create button clicked" << '\n';
             ImGui::CloseCurrentPopup();
         }
 
@@ -295,7 +332,7 @@ namespace pm
                 [&_project_name](project& _prj) { return _prj.name_ == _project_name; });
            
             std::size_t index = std::distance(std::begin(project_manager_.get_projects()), iter);
-            std::cout << "trying to set active project:" << index <<'\n';
+            //std::cout << "trying to set active project:" << index <<'\n';
             project_manager_.set_active_project(index);
         }
 
@@ -315,7 +352,7 @@ namespace pm
                 case GUI_STATUS::DUPLICATE_PROJECT_NAME:
                     popup_text_color_ = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
                     popup_status_string_ = "Cannot create project - DUPLICATE PROJECT NAME";
-                    std::cout << "DUPLICATE " << '\n';
+                    //std::cout << "DUPLICATE " << '\n';
                     break;
                 case GUI_STATUS::PROJECT_CREATE_SUCCESS:
                     popup_text_color_ = ImVec4(0.2f, 1.0f, 0.2f, 1.0f);
@@ -342,7 +379,7 @@ namespace pm
 
             auto time_difference = std::chrono::duration_cast<std::chrono::seconds>(time_now - popup_tp_);
 
-            std::cout << time_difference.count() << '\n';
+            //std::cout << time_difference.count() << '\n';
 
             if (time_difference.count() < 5)
             {
@@ -413,6 +450,54 @@ namespace pm
         void project_manager_gui::show_color_picker() {
             //static ImVec4 color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
             ImGui::ColorPicker3("Color", reinterpret_cast<float*>(& current_button_color_));
+        }
+
+        std::string project_manager_gui::format_desc_string(std::string _desc,const unsigned _parts)
+        {
+            const char space = ' ';
+
+            auto pos = _desc.find(space);
+            std::vector<size_t> spaces_positions;
+
+            if (pos == std::string::npos)
+            {
+                return format_no_space_string(_desc, _parts);
+            }
+            else
+            {
+                while (pos != std::string::npos)
+                {
+                    spaces_positions.emplace_back(pos);
+                    pos = _desc.find(space, pos + 1);
+                }
+
+                unsigned addition = spaces_positions.size() / _parts; // 7 space 2 size => addition = 3
+
+                if (addition == 0)
+                {
+                    std::cout << "only one space found" << '\n';
+                    return format_no_space_string(_desc, _parts);
+                }
+
+                std::string formatted_text = _desc.substr(0, spaces_positions[addition]);
+                for (int i = addition; i < spaces_positions.size()-addition; i = i + addition) // for (int i = 3 ; i < 7; i + addition) 3 6
+                {
+                    std::cout << i << '\n';
+                    formatted_text += "\n" + _desc.substr(spaces_positions[i], (spaces_positions[addition+i] - spaces_positions[addition]));
+                }
+
+                return formatted_text;
+            }
+        }
+        std::string project_manager_gui::format_no_space_string(std::string _desc, const unsigned _parts)
+        {
+            auto formatted_text = _desc.substr(0, PROJECT_DESC_MAX_LENGTH / 3);
+            for (int i = _parts - 1; i > 0; i--)
+            {
+                formatted_text += + "\n" + _desc.substr(PROJECT_DESC_MAX_LENGTH / (i + 1), PROJECT_DESC_MAX_LENGTH / i);
+            }
+            std::cout << formatted_text << '\n';
+            return formatted_text;
         }
     }
 } //namespace lpp

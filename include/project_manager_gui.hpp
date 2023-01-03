@@ -3,9 +3,8 @@
 #include "project_manager.hpp"
 #include "common.hpp"
 
-
-constexpr size_t PROJECT_NAME_MAX_LENGTH = 25;
-constexpr size_t PROJECT_DESC_MAX_LENGTH = 125;
+constexpr size_t PROJECT_NAME_MAX_LENGTH = 15;
+constexpr size_t PROJECT_DESC_MAX_LENGTH = 90;
 
 namespace pm
 {
@@ -58,6 +57,10 @@ namespace pm
             void on_project_button_active(const std::string_view& _project_name);
             void on_create_project_button();
             void show_color_picker();
+        
+        private:
+            std::string format_desc_string(std::string _desc,const unsigned _parts);
+            std::string format_no_space_string(std::string _desc, const unsigned _parts);
 
         private:
             const float button_size_width_ = 125.0f;

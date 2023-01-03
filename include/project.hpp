@@ -25,9 +25,10 @@ struct project
     std::chrono::microseconds overall_time_ = {};
     ImVec4 color_ = random_color();
     size_t id_ = 0;
+    std::string description_ = "";
+    std::chrono::time_point<std::chrono::system_clock> time_created = std::chrono::system_clock::now();
     std::chrono::time_point<std::chrono::high_resolution_clock> last_time_check = std::chrono::high_resolution_clock::now();
     bool currently_active_ = false;
-    std::string description_ = "";
 };
 
 
