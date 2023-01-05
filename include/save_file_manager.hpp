@@ -86,25 +86,21 @@ namespace pm::save_file
 	}
 
 	template<typename Project>
-	void vector_to_json(std::vector < std::pair<Project, std::chrono::seconds>>& active_projects)
+	nlohmann::json vector_to_json(std::vector<Project> _active_projects)
 	{
-		constexpr bool has_get_name = requires(const Project p)
-		{
-			p.get_name();
-		}
+		static_assert(std::is_convertible_v<Project, nlohmann::json>, "Project type is not convertible to nlohmann::json");
 
-		if constexpr (has_get_name)
+		std::vector<nlohmann::json> jsons;
+		for (auto&& prj : _active_projects)
 		{
-			for (auto& a : active_projects)
-			{
-				config_js[a.first.name] = a.second.count();
-			}
+			nlohmann::json js = prj;
+			jsons.emplace_back(js);
 		}
-		else
-		{
-			static_assert(false);
-		}
+		nlohmann::json output_js = jsons;
+
+		return output_js;
 	}
+
 
 	std::string pretty_print(std::chrono::seconds& sec)
 	{
@@ -124,13 +120,16 @@ namespace pm::save_file
 
 		csv_file.open("projects.csv");
 
-		csv_file << "Project name; hours worked \n";
+		csv_file << "Project name; Time created ; Time spent on project ; Description \n";
 		std::chrono::seconds sec(0);
 
-		for (auto& a : _config_js.items())
+		for (nlohmann::json::iterator it = _config_js.begin(); it != _config_js.end(); ++it)
 		{
-			sec = static_cast<std::chrono::seconds>(a.value());
-			csv_file << a.key() << ";" << pretty_print(sec) << ";\n";
+			std::string project_name = it->begin().key();
+			nlohmann::json value = it->begin().value();
+			sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::microseconds(value.at("project_time")));
+			auto time_created = std::chrono::system_clock::to_time_t(value.at("time_created"));
+			csv_file << project_name << ";" << pretty_print(sec) << ";\n";
 		}
 		csv_file.close();
 	}
