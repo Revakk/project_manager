@@ -31,7 +31,7 @@ struct project
     std::chrono::time_point<std::chrono::high_resolution_clock> last_time_check = std::chrono::high_resolution_clock::now();
     bool currently_active_ = false;
 
-    nlohmann::json parse_into_json()
+    operator nlohmann::json const()
     {
         nlohmann::json outer_js;
         nlohmann::json inner_js;

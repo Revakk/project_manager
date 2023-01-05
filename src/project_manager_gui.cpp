@@ -85,7 +85,7 @@ namespace pm
             {
                 ImGui::OpenPopup("create_project_popup");
 
-                ImGui::EndPopup();
+                
             }
             //create_project_popup();
         }
