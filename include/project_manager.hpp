@@ -29,6 +29,7 @@ public:
 	std::string get_project_string(const size_t _idx) const;
 	std::string project_time_to_string(std::chrono::microseconds _duration) const;
 	void delete_project(const size_t _id);
+	void set_loaded_projects(std::vector<project>& _projects);
 
 private:
 	

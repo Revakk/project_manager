@@ -11,7 +11,6 @@ namespace pm::save_file
 		return file_name.peek() == std::ifstream::traits_type::eof();
 	}
 
-
 	std::optional<nlohmann::json> read_config(std::string _config_name)
 	{
 		std::ifstream read_config;
@@ -22,7 +21,7 @@ namespace pm::save_file
 		{
 			if (is_empty(read_config))
 			{
-				return;
+				return std::nullopt;
 			}
 			std::string json_config_ss;
 			
@@ -63,7 +62,7 @@ namespace pm::save_file
 	}
 
 
-	template<typename Project>
+	/*template<typename Project>
 	std::vector<std::pair<Project, std::chrono::seconds>> config_projects()
 	{
 
@@ -83,10 +82,10 @@ namespace pm::save_file
 
 
 		return active_projects;
-	}
+	}*/
 
 	template<typename Project>
-	nlohmann::json vector_to_json(std::vector<Project> _active_projects)
+	nlohmann::json vector_to_json(std::span<Project> _active_projects)
 	{
 		static_assert(std::is_convertible_v<Project, nlohmann::json>, "Project type is not convertible to nlohmann::json");
 
@@ -99,6 +98,48 @@ namespace pm::save_file
 		nlohmann::json output_js = jsons;
 
 		return output_js;
+	}
+
+	template<typename Project>
+	std::vector<Project> json_to_container(nlohmann::json& _js)
+	{
+		static_assert(std::is_convertible_v<Project, nlohmann::json>, "Project type is not convertible to nlohmann::json");
+		//static_assert(std::is_unbounded_array_v<Cont>, "Container must be unbounded");
+
+		std::vector<Project> container;
+
+		for (nlohmann::json::iterator it = _js.begin(); it != _js.end(); ++it)
+		{
+			std::string project_name = it->begin().key();
+			nlohmann::json value = it->begin().value();
+
+			Project prj;//default constructor
+			prj.name_ = project_name;
+			auto color_arr = value["color"].get<std::array<float, 4>>();
+			prj.color_ = ImVec4(color_arr[0], color_arr[1], color_arr[2], color_arr[3]);
+			prj.id_ = value.at("id");
+			prj.description_ = value.at("description");
+			long tc_count = value.at("time_created");
+			std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> time_point_tc{ std::chrono::seconds{tc_count} };
+			prj.time_created = time_point_tc;
+			long long project_time = value.at("project_time");
+			prj.overall_time_ = std::chrono::microseconds(project_time);
+
+			container.emplace_back(prj);
+		}
+
+		return container;
+	}
+
+	bool save_json_to_file(nlohmann::json& _js)
+	{
+		std::ofstream save_json("config_js.json");
+
+		if (save_json.is_open())
+		{
+			save_json.clear();
+			save_json << _js.dump();
+		}
 	}
 
 
@@ -116,6 +157,7 @@ namespace pm::save_file
 
 	void export_to_csv(nlohmann::json _config_js)
 	{
+		std::cout <<"json: " << _config_js << '\n';
 		std::ofstream csv_file;
 
 		csv_file.open("projects.csv");
@@ -128,8 +170,13 @@ namespace pm::save_file
 			std::string project_name = it->begin().key();
 			nlohmann::json value = it->begin().value();
 			sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::microseconds(value.at("project_time")));
-			auto time_created = std::chrono::system_clock::to_time_t(value.at("time_created"));
-			csv_file << project_name << ";" << pretty_print(sec) << ";\n";
+			long tc_count = value.at("time_created");
+			std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> time_point_tc{ std::chrono::seconds{tc_count} };
+			std::string tc_str = std::format("{:%Y/%m/%d %H:%M:%S}", time_point_tc);
+			std::cout << tc_str << '\n';
+			std::string desc = value.at("description");
+			
+			csv_file << project_name << ";"<< tc_str << ";" << pretty_print(sec) << ";" << desc << "\n";
 		}
 		csv_file.close();
 	}
