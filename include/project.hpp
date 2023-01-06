@@ -40,7 +40,7 @@ struct project
         inner_js["color"] = { color_.x,color_.y ,color_.z ,color_.w };
         inner_js["id"] = id_;
         inner_js["description"] = description_;
-        inner_js["time_created"] = time_created.time_since_epoch().count();
+        inner_js["time_created"] = std::chrono::time_point_cast<std::chrono::seconds>(time_created).time_since_epoch().count();
 
         outer_js[name_] = inner_js;
         return outer_js;

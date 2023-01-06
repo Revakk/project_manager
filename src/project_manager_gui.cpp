@@ -6,6 +6,7 @@
 #include <memory>
 #include <thread>
 #include <iostream>
+#include "save_file_manager.hpp"
 
 namespace pm
 {
@@ -104,8 +105,26 @@ namespace pm
         {
             if (ImGui::BeginPopup("export_time_popup"))
             {
-                if (ImGui::Button("Export"));
-                if (ImGui::Button("Load"));
+                if (ImGui::Button("Save"))
+                {
+                    auto project_json = pm::save_file::vector_to_json(project_manager_.get_projects());
+                    pm::save_file::save_json_to_file(project_json);
+                }
+                if (ImGui::Button("Save & Export"))
+                {
+                    auto project_json = pm::save_file::vector_to_json(project_manager_.get_projects());
+                    pm::save_file::save_json_to_file(project_json);
+                    pm::save_file::export_to_csv(project_json);
+                }
+                if (ImGui::Button("Load"))
+                {
+                    auto js = pm::save_file::read_config("config_js.json");
+                    if (js.has_value())
+                    {
+                        auto loaded_projects = pm::save_file::json_to_container<project>(js.value());
+                        project_manager_.set_loaded_projects(loaded_projects);
+                    }
+                }
                 //export_times_implementation
                 ImGui::EndPopup();
             }

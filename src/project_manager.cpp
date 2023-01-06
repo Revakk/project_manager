@@ -98,6 +98,11 @@ void project_manager::delete_project(const size_t _id)
 	}
 }
 
+void project_manager::set_loaded_projects(std::vector<project>& _projects)
+{
+	projects_ = _projects;
+}
+
 void project_manager::reset_instance_time(size_t _id)
 {
 	projects_[_id].current_instance_time_ = std::chrono::microseconds(0);
