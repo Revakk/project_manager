@@ -139,7 +139,10 @@ namespace pm::save_file
 		{
 			save_json.clear();
 			save_json << _js.dump();
+
+			return true;
 		}
+		return false;
 	}
 
 
