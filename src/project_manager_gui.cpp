@@ -302,6 +302,11 @@ namespace pm
 
             for (size_t i = 0;const auto& prj : project_manager_.get_projects())
             {
+                auto col_hovered = prj.color_;
+                col_hovered.w = 0.5;
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, col_hovered);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, prj.color_);
+
                 if (project_manager_.get_active_project_id() == i)
                 {
                     //ImGui::PushTextWrapPos(5.0f);
@@ -313,6 +318,7 @@ namespace pm
                 }
                 else
                 {
+                    
                     //ImGui::PushTextWrapPos(5.0f);
                     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.1f, 0.1f));
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
@@ -341,7 +347,7 @@ namespace pm
                     //ImGui::SameLine();
                     current_column++;
                 }
-                ImGui::PopStyleColor(3);
+                ImGui::PopStyleColor(5);
                 ImGui::PopStyleVar(2);
                 ImGui::PopTextWrapPos();
                 i++;
